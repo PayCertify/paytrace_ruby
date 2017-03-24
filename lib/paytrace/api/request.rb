@@ -7,15 +7,15 @@ module PayTrace
       # :doc:
 
       # Initializes a new Request object
-      def initialize
+      def initialize(configuration=nil)
         @field_delim = "|"
         @multi_field_delim = "+"
         @value_delim = "~"
         @multi_value_delim = "="
-
+        configuration ||= PayTrace.configuration
         @params= {
-          user_name: [PayTrace.configuration.user_name],
-          password: [PayTrace.configuration.password],
+          user_name: [configuration.user_name],
+          password: [configuration.password],
           terms: ["Y"]
         }
 
@@ -42,7 +42,7 @@ module PayTrace
       # Sets discretionary data keys and values
       # * *:key* -- the name of the setting
       # * *:value* -- the value of the setting
-      # 
+      #
       # _Note:_ you can bulk-set discretionary data by simply passing in a hash as the "key"
       def set_discretionary(key, value = nil)
         if key.is_a?(Hash)
@@ -116,7 +116,7 @@ module PayTrace
       #   set_params([
       #       :foo,
       #       [:billing_address, :address]
-      #     ], params) 
+      #     ], params)
       def set_params(params, required = [], optional = [])
         required_remaining, params_remaining = Request.process_param_list(required, params) do |request_variable, arg_name, value|
           set_param(request_variable, value)

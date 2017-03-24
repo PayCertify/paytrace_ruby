@@ -7,7 +7,7 @@ module PayTrace
     # Helper for sending requests
     class Gateway
       # :nodoc:
-      attr_accessor :connection
+      attr_accessor :cfg
       @@debug = false
       @@last_request = nil
       @@last_response = nil
@@ -17,14 +17,14 @@ module PayTrace
       # :doc:
 
       # Creates a new gateway object, optionally using a supplied connection object
-      def initialize(connection = nil)
-        @connection = connection || PayTrace.configuration.connection
+      def initialize(cfg = nil)
+        @cfg = cfg || PayTrace.configuration
       end
 
       # Sets or clears a debug flag to enable testing
       def self.debug=(enable)
         @@debug = enable
-      end 
+      end
 
       # Clears debug data
       def self.reset_trace
@@ -65,13 +65,13 @@ module PayTrace
       #
       # * *param_names* -- the array of parameter names to be set from *arguments*
       # * *arguments* -- the arguments to be set in the request
-      def self.send_request(method, params, required = [], optional = [])
-        request = Request.new
+      def self.send_request(method, params, required = [], optional = [], cfg = nil)
+        request = Request.new(cfg)
         request.set_param(:method, method)
         request.set_params(params, required, optional)
         yield request if block_given?
 
-        gateway = Gateway.new
+        gateway = Gateway.new(cfg)
         gateway.send_request(request)
       end
 
@@ -79,12 +79,12 @@ module PayTrace
       def send_request(request)
         @@last_request = request.to_parms_string if @@debug
         unless (@@debug && @@next_response)
-          res = @connection.post PayTrace.configuration.url, parmlist: request.to_parms_string
+          res = @cfg.connection.post @cfg.url, parmlist: request.to_parms_string
           raw_response = res.body
         else
           raw_response = @@next_response
         end
-        
+
         @@last_response = raw_response
         response = PayTrace::API::Response.new(raw_response)
         @@last_response_object = response
